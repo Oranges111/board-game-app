@@ -23,31 +23,35 @@ const PRESET_LAYOUTS = {
 let gameState = {
     pieces: {
         // Each piece tracks its position (circleId or 'inactive')
-        'hero-red': 'inactive',
-        'hero-blue': 'inactive',
-        'hero-green': 'inactive',
-        'hero-yellow': 'inactive',
-        'sidekick-red': 'inactive',
-        'sidekick-blue': 'inactive',
-        'sidekick-green': 'inactive',
-        'sidekick-yellow': 'inactive'
+        // Dynamically populated as players are added
     },
     health: {
         // Track health for each piece
-        'hero-red': 15,
-        'hero-blue': 15,
-        'hero-green': 15,
-        'hero-yellow': 15,
-        'sidekick-red': 6,
-        'sidekick-blue': 6,
-        'sidekick-green': 6,
-        'sidekick-yellow': 6
+        // Dynamically populated as players are added
     },
+    heroes: {
+        // Track which hero numbers are in use and their sidekick count
+        // Format: { 1: { color: 'red', sidekicks: 2 }, ... }
+    },
+    availableHeroNumbers: [1, 2, 3, 4], // Available hero numbers to assign
+    availableColors: ['red', 'blue', 'green', 'yellow'], // Colors to cycle through
+    colorIndex: 0, // Current color index
     circles: [], // Array of circle objects
     adjacencies: [], // Array of adjacency connections
     startingSpaces: [], // Array of 4 circle indices that are starting positions
     totalMoves: 0,
-    currentLayout: 1 // Track which layout is active
+    currentLayout: 1, // Track which layout is active
+
+    // Turn management
+    turnNumber: 0,
+    currentPlayerIndex: 0,
+    playerOrder: [], // Array of hero numbers in turn order
+    actions: {
+        maneuver: 0,
+        attack: 0,
+        scheme: 0
+    },
+    totalActionsSelected: 0
 };
 
 // Get DOM elements
@@ -55,25 +59,36 @@ const gameBoard = document.getElementById('gameBoard');
 const inactiveArea = document.getElementById('inactiveArea');
 const gameStatus = document.getElementById('gameStatus');
 const resetBtn = document.getElementById('resetBtn');
+const addPlayerBtn = document.getElementById('addPlayerBtn');
+const healthDialsContainer = document.getElementById('healthDialsContainer');
+
+// Turn management elements
+const turnNumberDisplay = document.getElementById('turnNumber');
+const activePlayerDisplay = document.getElementById('activePlayer');
+const maneuverBtn = document.getElementById('maneuverBtn');
+const attackBtn = document.getElementById('attackBtn');
+const schemeBtn = document.getElementById('schemeBtn');
+const nextTurnBtn = document.getElementById('nextTurnBtn');
 
 // Initialize the game
 function initGame() {
     initializePresetLayouts();
     loadLayout(1);
-    setupDragAndDrop();
     setupResetButton();
     setupLayoutSelector();
-    setupHealthControls();
-    updateGameStatus('Drag heroes and sidekicks to circles on the board');
+    setupPlayerManagement();
+    setupTurnManagement();
+    updateGameStatus('Click "Add Player" to add heroes to the game');
 }
 
 // Initialize all 5 preset layouts
 function initializePresetLayouts() {
-    // Generate 5 different layouts with different random seeds
+    // Generate 5 different layouts with fixed seeds - this ensures consistency across refreshes
     for (let i = 1; i <= 5; i++) {
-        const circles = generateCirclePositions(i * 12345); // Use different seed for each
-        const adjacencies = generateAdjacencies(circles);
-        const startingSpaces = selectStartingSpaces(circles, i * 12345);
+        const seed = i * 12345;
+        const circles = generateCirclePositions(seed); // Use different seed for each
+        const adjacencies = generateAdjacencies(circles, seed); // Pass seed for deterministic adjacencies
+        const startingSpaces = selectStartingSpaces(circles, seed);
         PRESET_LAYOUTS[i] = {
             circles: circles,
             adjacencies: adjacencies,
@@ -229,7 +244,8 @@ function selectStartingSpaces(circles, seed) {
 }
 
 // Generate adjacency connections ensuring full connectivity
-function generateAdjacencies(circles) {
+function generateAdjacencies(circles, seed = Date.now()) {
+    const rng = seededRandom(seed + 999); // Add offset to seed for adjacency RNG
     const adjacencies = [];
     const connections = new Array(circles.length).fill(0).map(() => []);
 
@@ -277,7 +293,7 @@ function generateAdjacencies(circles) {
         }
     }
 
-    // Second pass: Add more connections randomly for variety (only for nearby circles)
+    // Second pass: Add more connections deterministically for variety (only for nearby circles)
     const nearbyDistances = allDistances.filter(d => d.distance < BOARD_CONFIG.maxConnectionDistance);
     for (const edge of nearbyDistances) {
         // Skip if already connected
@@ -287,7 +303,7 @@ function generateAdjacencies(circles) {
         const maxConnections = 4; // Reduced from 5 to avoid line clutter
         if (connections[edge.from].length < maxConnections &&
             connections[edge.to].length < maxConnections &&
-            Math.random() < 0.25) { // Reduced probability from 0.3 to 0.25
+            rng() < 0.25) { // Use seeded random instead of Math.random()
             adjacencies.push({ from: edge.from, to: edge.to });
             connections[edge.from].push(edge.to);
             connections[edge.to].push(edge.from);
@@ -337,15 +353,54 @@ function setupLayoutSelector() {
         btn.addEventListener('click', () => {
             const layoutNum = parseInt(btn.dataset.layout);
 
+            // Don't reload if already on this layout
+            if (layoutNum === gameState.currentLayout) return;
+
             // Update active button
             layoutBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // Load the layout
+            // Remove all game pieces from DOM
+            const allPieces = document.querySelectorAll('.game-piece');
+            allPieces.forEach(piece => {
+                piece.remove();
+            });
+
+            // Remove all health dials from DOM
+            const allDials = document.querySelectorAll('.health-dial');
+            allDials.forEach(dial => {
+                dial.remove();
+            });
+
+            // Reset game state completely
+            gameState.pieces = {};
+            gameState.health = {};
+            gameState.heroes = {};
+            gameState.availableHeroNumbers = [1, 2, 3, 4];
+            gameState.colorIndex = 0;
+            gameState.totalMoves = 0;
+
+            // Reset turn management
+            gameState.turnNumber = 0;
+            gameState.currentPlayerIndex = 0;
+            gameState.playerOrder = [];
+            gameState.actions.maneuver = 0;
+            gameState.actions.attack = 0;
+            gameState.actions.scheme = 0;
+            gameState.totalActionsSelected = 0;
+
+            // Update displays
+            updateTurnDisplay();
+            updateActionButtons();
+            updateNextTurnButton();
+
+            // Load the new layout
             loadLayout(layoutNum);
 
-            // Reset all pieces to inactive area
-            resetPiecesToInactive();
+            // Update status
+            updateGameStatus('Click "Add Player" to add heroes to the game');
+
+            console.log(`Switched to layout ${layoutNum} - all players deleted`);
         });
     });
 }
@@ -366,7 +421,13 @@ function resetPiecesToInactive() {
         gameState.pieces[pieceId] = 'inactive';
     });
 
-    updateGameStatus(`Layout ${gameState.currentLayout} loaded | Drag heroes and sidekicks to circles`);
+    // Update status based on game state
+    if (gameState.playerOrder.length > 0) {
+        const currentHero = gameState.playerOrder[gameState.currentPlayerIndex];
+        updateGameStatus(`Turn ${gameState.turnNumber} | Hero ${currentHero}'s turn - Select 2 actions`);
+    } else {
+        updateGameStatus('Click "Add Player" to add heroes to the game');
+    }
 }
 
 // Create adjacency line that touches circle borders, not interiors
@@ -455,19 +516,411 @@ function getZoneColorHex(color) {
     return colorMap[color] || '333333';
 }
 
-// Setup drag and drop functionality
-function setupDragAndDrop() {
-    // Setup drag for all game pieces
-    const allPieces = document.querySelectorAll('.game-piece');
-    allPieces.forEach(piece => {
-        piece.addEventListener('dragstart', handleDragStart);
-        piece.addEventListener('dragend', handleDragEnd);
-    });
+// ===== PLAYER MANAGEMENT =====
+
+// Setup player management
+function setupPlayerManagement() {
+    addPlayerBtn.addEventListener('click', promptAddPlayer);
 
     // Make inactive area droppable
     inactiveArea.addEventListener('dragover', handleDragOver);
     inactiveArea.addEventListener('dragleave', handleDragLeave);
     inactiveArea.addEventListener('drop', handleDropInactive);
+}
+
+// Prompt user to add a new player
+function promptAddPlayer() {
+    // Check if we have room for more heroes
+    if (gameState.availableHeroNumbers.length === 0) {
+        alert('Maximum of 4 heroes reached!');
+        return;
+    }
+
+    // Prompt for hero health (0-40)
+    const healthInput = prompt('Enter hero starting health (0-40):', '15');
+    if (healthInput === null) return; // User cancelled
+
+    const health = parseInt(healthInput);
+    if (isNaN(health) || health < 0 || health > 40) {
+        alert('Please enter a valid health value between 0 and 40');
+        return;
+    }
+
+    // Prompt for number of sidekicks (0-4)
+    const sidekicksInput = prompt('Enter number of sidekicks (0-4):', '0');
+    if (sidekicksInput === null) return; // User cancelled
+
+    const numSidekicks = parseInt(sidekicksInput);
+    if (isNaN(numSidekicks) || numSidekicks < 0 || numSidekicks > 4) {
+        alert('Please enter a valid number of sidekicks between 0 and 4');
+        return;
+    }
+
+    // Add the player
+    addPlayer(health, numSidekicks);
+}
+
+// Add a new player with specified health and sidekicks
+function addPlayer(heroHealth, numSidekicks) {
+    // Get the next available hero number
+    const heroNum = gameState.availableHeroNumbers.shift(); // Remove from available
+
+    // Get the next color
+    const color = gameState.availableColors[gameState.colorIndex];
+    gameState.colorIndex = (gameState.colorIndex + 1) % gameState.availableColors.length;
+
+    // Store hero info
+    gameState.heroes[heroNum] = {
+        color: color,
+        sidekicks: numSidekicks
+    };
+
+    // Create hero piece
+    const heroId = `hero-${heroNum}`;
+    createGamePiece(heroId, color, heroNum, 'hero', heroHealth);
+
+    // Create sidekick pieces
+    for (let i = 1; i <= numSidekicks; i++) {
+        const sidekickId = `sidekick-${heroNum}-${i}`;
+        const sidekickHealth = Math.max(1, Math.floor(heroHealth / 3)); // Default sidekick health
+        createGamePiece(sidekickId, color, heroNum, 'sidekick', sidekickHealth, i);
+    }
+
+    // Update turn order
+    updatePlayerOrder();
+}
+
+// Create a game piece (hero or sidekick)
+function createGamePiece(pieceId, color, heroNum, type, health, sidekickNum = null) {
+    // Create the piece element
+    const piece = document.createElement('div');
+    piece.className = `game-piece ${type} ${type}-${color}`;
+    piece.dataset.pieceId = pieceId;
+    piece.dataset.heroNum = heroNum;
+    piece.draggable = true;
+
+    // Add label
+    const label = document.createElement('span');
+    label.className = 'piece-label';
+    if (type === 'hero') {
+        label.textContent = `H${heroNum}`;
+    } else {
+        label.textContent = `S${heroNum}.${sidekickNum}`;
+    }
+    piece.appendChild(label);
+
+    // Add to inactive area
+    inactiveArea.appendChild(piece);
+
+    // Setup drag events
+    piece.addEventListener('dragstart', handleDragStart);
+    piece.addEventListener('dragend', handleDragEnd);
+
+    // Add to game state
+    gameState.pieces[pieceId] = 'inactive';
+    gameState.health[pieceId] = health;
+
+    // Create health dial
+    createHealthDial(pieceId, type, heroNum, sidekickNum, health, color);
+}
+
+// Create a health dial for a piece
+function createHealthDial(pieceId, type, heroNum, sidekickNum, health, color) {
+    const dial = document.createElement('div');
+    dial.className = `health-dial dial-${color}`;
+    dial.dataset.pieceId = pieceId;
+
+    // Label
+    const label = document.createElement('span');
+    label.className = 'health-dial-label';
+    if (type === 'hero') {
+        label.textContent = `H${heroNum}`;
+    } else {
+        label.textContent = `S${heroNum}.${sidekickNum}`;
+    }
+    dial.appendChild(label);
+
+    // Delete button (trash can)
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-piece-btn';
+    deleteBtn.textContent = '🗑';
+    deleteBtn.dataset.pieceId = pieceId;
+    deleteBtn.dataset.type = type;
+    deleteBtn.dataset.heroNum = heroNum;
+    deleteBtn.addEventListener('click', () => deletePiece(pieceId, type, heroNum));
+    dial.appendChild(deleteBtn);
+
+    // Health up button
+    const upBtn = document.createElement('button');
+    upBtn.className = 'health-btn health-up';
+    upBtn.dataset.piece = pieceId;
+    upBtn.textContent = '▲';
+    upBtn.addEventListener('click', () => changeHealth(pieceId, 1));
+    dial.appendChild(upBtn);
+
+    // Health display
+    const display = document.createElement('span');
+    display.className = 'health-display';
+    display.dataset.piece = pieceId;
+    display.textContent = health;
+    dial.appendChild(display);
+
+    // Health down button
+    const downBtn = document.createElement('button');
+    downBtn.className = 'health-btn health-down';
+    downBtn.dataset.piece = pieceId;
+    downBtn.textContent = '▼';
+    downBtn.addEventListener('click', () => changeHealth(pieceId, -1));
+    dial.appendChild(downBtn);
+
+    // Add to health panel
+    healthDialsContainer.appendChild(dial);
+}
+
+// Delete a piece (hero or sidekick)
+function deletePiece(pieceId, type, heroNum) {
+    if (type === 'hero') {
+        // Deleting a hero removes the hero and ALL its sidekicks
+        const heroInfo = gameState.heroes[heroNum];
+        if (!heroInfo) return;
+
+        // Confirm deletion
+        const numSidekicks = heroInfo.sidekicks;
+        const confirmMsg = numSidekicks > 0
+            ? `Delete Hero ${heroNum} and its ${numSidekicks} sidekick(s)?`
+            : `Delete Hero ${heroNum}?`;
+
+        if (!confirm(confirmMsg)) return;
+
+        // Remove hero piece and dial
+        removePieceAndDial(`hero-${heroNum}`);
+
+        // Remove all sidekicks
+        for (let i = 1; i <= numSidekicks; i++) {
+            const sidekickId = `sidekick-${heroNum}-${i}`;
+            removePieceAndDial(sidekickId);
+        }
+
+        // Remove hero from state
+        delete gameState.heroes[heroNum];
+
+        // Make hero number available again
+        gameState.availableHeroNumbers.push(heroNum);
+        gameState.availableHeroNumbers.sort((a, b) => a - b);
+
+        // Update turn order
+        updatePlayerOrder();
+
+    } else {
+        // Deleting a sidekick only removes that sidekick
+        if (!confirm(`Delete this sidekick?`)) return;
+
+        removePieceAndDial(pieceId);
+
+        // Update sidekick count
+        if (gameState.heroes[heroNum]) {
+            gameState.heroes[heroNum].sidekicks--;
+        }
+    }
+}
+
+// Remove a piece from board/inactive area and its health dial
+function removePieceAndDial(pieceId) {
+    // Remove piece from board or inactive area
+    const piece = document.querySelector(`.game-piece[data-piece-id="${pieceId}"]`);
+    if (piece) {
+        const parent = piece.parentElement;
+        if (parent && parent.classList.contains('circle-space')) {
+            // Check if this was the last piece in the circle
+            const piecesInCircle = parent.querySelectorAll('.game-piece');
+            if (piecesInCircle.length === 1) {
+                parent.classList.remove('occupied');
+            }
+        }
+        piece.remove();
+    }
+
+    // Remove health dial
+    const dial = document.querySelector(`.health-dial[data-piece-id="${pieceId}"]`);
+    if (dial) {
+        dial.remove();
+    }
+
+    // Remove from state
+    delete gameState.pieces[pieceId];
+    delete gameState.health[pieceId];
+}
+
+// ===== TURN MANAGEMENT =====
+
+// Setup turn management
+function setupTurnManagement() {
+    // Setup action button listeners
+    maneuverBtn.addEventListener('click', () => selectAction('maneuver'));
+    attackBtn.addEventListener('click', () => selectAction('attack'));
+    schemeBtn.addEventListener('click', () => selectAction('scheme'));
+
+    // Setup next turn button
+    nextTurnBtn.addEventListener('click', nextTurn);
+
+    // Initialize display
+    updateTurnDisplay();
+}
+
+// Select an action (max 2 total actions)
+function selectAction(actionType) {
+    // Check if we can add more actions
+    if (gameState.totalActionsSelected >= 2) {
+        // If clicking an already selected action, deselect it
+        if (gameState.actions[actionType] > 0) {
+            gameState.actions[actionType]--;
+            gameState.totalActionsSelected--;
+        } else {
+            return; // Can't add more actions
+        }
+    } else {
+        // Check if this action can be selected (max 2 of same type)
+        if (gameState.actions[actionType] < 2) {
+            gameState.actions[actionType]++;
+            gameState.totalActionsSelected++;
+        }
+    }
+
+    updateActionButtons();
+    updateNextTurnButton();
+}
+
+// Update action button displays
+function updateActionButtons() {
+    // Update maneuver button
+    updateActionButton(maneuverBtn, 'maneuver');
+    updateActionButton(attackBtn, 'attack');
+    updateActionButton(schemeBtn, 'scheme');
+}
+
+// Update a single action button
+function updateActionButton(button, actionType) {
+    const count = gameState.actions[actionType];
+    const countSpan = button.querySelector('.action-count');
+    countSpan.textContent = count;
+
+    // Remove all selection classes
+    button.classList.remove('selected-once', 'selected-twice');
+
+    // Add appropriate class
+    if (count === 1) {
+        button.classList.add('selected-once');
+    } else if (count === 2) {
+        button.classList.add('selected-twice');
+    }
+
+    // Disable button if 2 total actions selected and this one has 0
+    if (gameState.totalActionsSelected >= 2 && count === 0) {
+        button.disabled = true;
+    } else {
+        button.disabled = false;
+    }
+}
+
+// Update next turn button state
+function updateNextTurnButton() {
+    // Enable only if 2 actions are selected and there are players
+    if (gameState.totalActionsSelected === 2 && gameState.playerOrder.length > 0) {
+        nextTurnBtn.disabled = false;
+    } else {
+        nextTurnBtn.disabled = true;
+    }
+}
+
+// Advance to next turn
+function nextTurn() {
+    if (gameState.playerOrder.length === 0) return;
+
+    // Reset actions
+    gameState.actions.maneuver = 0;
+    gameState.actions.attack = 0;
+    gameState.actions.scheme = 0;
+    gameState.totalActionsSelected = 0;
+
+    // Move to next player
+    gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.playerOrder.length;
+
+    // If back to first player, increment turn number
+    if (gameState.currentPlayerIndex === 0) {
+        gameState.turnNumber++;
+    }
+
+    // Update displays
+    updateActionButtons();
+    updateNextTurnButton();
+    updateTurnDisplay();
+
+    const currentHero = gameState.playerOrder[gameState.currentPlayerIndex];
+    updateGameStatus(`Turn ${gameState.turnNumber} | Hero ${currentHero}'s turn - Select 2 actions`);
+}
+
+// Update turn display
+function updateTurnDisplay() {
+    if (gameState.playerOrder.length === 0) {
+        turnNumberDisplay.textContent = '-';
+        activePlayerDisplay.textContent = 'None';
+    } else {
+        turnNumberDisplay.textContent = gameState.turnNumber;
+        const currentHero = gameState.playerOrder[gameState.currentPlayerIndex];
+        activePlayerDisplay.textContent = `Hero ${currentHero}`;
+    }
+}
+
+// Start the game (called when first player is added)
+function startGame() {
+    // Build player order from heroes
+    gameState.playerOrder = Object.keys(gameState.heroes).map(num => parseInt(num)).sort((a, b) => a - b);
+    gameState.turnNumber = 1;
+    gameState.currentPlayerIndex = 0;
+
+    // Reset actions
+    gameState.actions.maneuver = 0;
+    gameState.actions.attack = 0;
+    gameState.actions.scheme = 0;
+    gameState.totalActionsSelected = 0;
+
+    updateTurnDisplay();
+    updateActionButtons();
+    updateNextTurnButton();
+
+    const currentHero = gameState.playerOrder[gameState.currentPlayerIndex];
+    updateGameStatus(`Game started! Turn ${gameState.turnNumber} | Hero ${currentHero}'s turn - Select 2 actions`);
+}
+
+// Update player order when heroes are added/removed
+function updatePlayerOrder() {
+    const hadPlayers = gameState.playerOrder.length > 0;
+    gameState.playerOrder = Object.keys(gameState.heroes).map(num => parseInt(num)).sort((a, b) => a - b);
+
+    if (gameState.playerOrder.length === 0) {
+        // No more players
+        gameState.turnNumber = 0;
+        gameState.currentPlayerIndex = 0;
+        updateTurnDisplay();
+        updateNextTurnButton();
+    } else if (!hadPlayers && gameState.playerOrder.length > 0) {
+        // First player(s) added, start the game
+        startGame();
+    } else {
+        // Adjust current player index if needed
+        if (gameState.currentPlayerIndex >= gameState.playerOrder.length) {
+            gameState.currentPlayerIndex = 0;
+        }
+        updateTurnDisplay();
+        updateNextTurnButton();
+    }
+}
+
+// ===== DRAG AND DROP =====
+
+// Setup drag and drop functionality (already handled in setupPlayerManagement)
+function setupDragAndDrop() {
+    // This function is no longer needed as drag events are set up when pieces are created
 }
 
 // Drag Start
@@ -544,7 +997,7 @@ function handleDropInactive(e) {
 
 // Move piece to a specific circle space
 function movePieceToCircle(pieceId, space, circleId) {
-    const piece = document.querySelector(`[data-piece-id="${pieceId}"]`);
+    const piece = document.querySelector(`.game-piece[data-piece-id="${pieceId}"]`);
     if (!piece) return;
 
     // Remove piece from previous location
@@ -565,28 +1018,12 @@ function movePieceToCircle(pieceId, space, circleId) {
     gameState.pieces[pieceId] = circleId;
     gameState.totalMoves++;
 
-    // Get zone info for this circle
-    const circle = gameState.circles[circleId];
-    const zoneText = circle.zones.length === 1
-        ? circle.zones[0]
-        : circle.zones.join('/');
-
-    // Get adjacent circles
-    const adjacentCircles = getAdjacentCircles(circleId);
-
-    // Count pieces on board
-    const piecesOnBoard = Object.values(gameState.pieces).filter(pos => pos !== 'inactive').length;
-
-    // Update status
-    updateGameStatus(`${pieceId} → Circle ${circleId} (${zoneText}) | Pieces on board: ${piecesOnBoard} | Total moves: ${gameState.totalMoves}`);
-
     console.log(`${pieceId} moved to circle ${circleId}`);
-    console.log('Adjacent circles:', adjacentCircles);
 }
 
 // Move piece to inactive area
 function movePieceToInactive(pieceId) {
-    const piece = document.querySelector(`[data-piece-id="${pieceId}"]`);
+    const piece = document.querySelector(`.game-piece[data-piece-id="${pieceId}"]`);
     if (!piece) return;
 
     // Remove piece from previous location
@@ -604,12 +1041,6 @@ function movePieceToInactive(pieceId) {
 
     // Update game state
     gameState.pieces[pieceId] = 'inactive';
-
-    // Count pieces on board
-    const piecesOnBoard = Object.values(gameState.pieces).filter(pos => pos !== 'inactive').length;
-
-    // Update status
-    updateGameStatus(`${pieceId} → Inactive Area | Pieces on board: ${piecesOnBoard} | Total moves: ${gameState.totalMoves}`);
 
     console.log(`${pieceId} moved to inactive area`);
 }
@@ -641,29 +1072,57 @@ function setupResetButton() {
 
 // Reset the game
 function resetGame() {
-    // Move all pieces back to inactive area
+    // Confirm deletion
+    const numHeroes = Object.keys(gameState.heroes).length;
+    if (numHeroes > 0) {
+        if (!confirm('Reset will delete all heroes and sidekicks. Continue?')) {
+            return;
+        }
+    }
+
+    // Remove all game pieces from DOM
     const allPieces = document.querySelectorAll('.game-piece');
     allPieces.forEach(piece => {
-        const currentParent = piece.parentElement;
-        if (currentParent.classList.contains('circle-space')) {
-            currentParent.classList.remove('occupied');
-        }
-        inactiveArea.appendChild(piece);
+        piece.remove();
+    });
+
+    // Remove all health dials from DOM
+    const allDials = document.querySelectorAll('.health-dial');
+    allDials.forEach(dial => {
+        dial.remove();
     });
 
     // Reset game state
-    Object.keys(gameState.pieces).forEach(pieceId => {
-        gameState.pieces[pieceId] = 'inactive';
-    });
+    gameState.pieces = {};
+    gameState.health = {};
+    gameState.heroes = {};
+    gameState.availableHeroNumbers = [1, 2, 3, 4];
+    gameState.colorIndex = 0;
     gameState.totalMoves = 0;
 
-    // Reset health
-    resetAllHealth();
+    // Reset turn management
+    gameState.turnNumber = 0;
+    gameState.currentPlayerIndex = 0;
+    gameState.playerOrder = [];
+    gameState.actions.maneuver = 0;
+    gameState.actions.attack = 0;
+    gameState.actions.scheme = 0;
+    gameState.totalActionsSelected = 0;
+
+    // Remove occupied class from all circles
+    document.querySelectorAll('.circle-space.occupied').forEach(circle => {
+        circle.classList.remove('occupied');
+    });
+
+    // Update displays
+    updateTurnDisplay();
+    updateActionButtons();
+    updateNextTurnButton();
 
     // Update status
-    updateGameStatus('Game reset! Drag heroes and sidekicks to circles on the board');
+    updateGameStatus('Game reset! Click "Add Player" to add heroes to the game');
 
-    console.log('Game reset');
+    console.log('Game reset - all players deleted');
 }
 
 // Helper functions
@@ -703,26 +1162,10 @@ function isCircleInZone(circleId, zoneName) {
     return circle ? circle.zones.includes(zoneName) : false;
 }
 
-// Setup health controls
-function setupHealthControls() {
-    const healthBtns = document.querySelectorAll('.health-btn');
-    healthBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent triggering other events
-            const pieceId = btn.dataset.piece;
-            const isIncrement = btn.classList.contains('health-up');
-
-            if (isIncrement) {
-                changeHealth(pieceId, 1);
-            } else {
-                changeHealth(pieceId, -1);
-            }
-        });
-    });
-}
-
 // Change health for a piece
 function changeHealth(pieceId, amount) {
+    if (gameState.health[pieceId] === undefined) return;
+
     gameState.health[pieceId] += amount;
 
     // Don't allow negative health
@@ -740,26 +1183,6 @@ function updateHealthDisplay(pieceId) {
     if (healthDisplay) {
         healthDisplay.textContent = gameState.health[pieceId];
     }
-}
-
-// Reset health for all pieces
-function resetAllHealth() {
-    // Reset heroes to 15
-    gameState.health['hero-red'] = 15;
-    gameState.health['hero-blue'] = 15;
-    gameState.health['hero-green'] = 15;
-    gameState.health['hero-yellow'] = 15;
-
-    // Reset sidekicks to 6
-    gameState.health['sidekick-red'] = 6;
-    gameState.health['sidekick-blue'] = 6;
-    gameState.health['sidekick-green'] = 6;
-    gameState.health['sidekick-yellow'] = 6;
-
-    // Update all displays
-    Object.keys(gameState.health).forEach(pieceId => {
-        updateHealthDisplay(pieceId);
-    });
 }
 
 // Initialize the game when page loads

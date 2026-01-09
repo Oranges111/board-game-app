@@ -20,94 +20,58 @@
     <!-- Health Dials Panel - on the right side -->
     <div class="health-panel">
         <span class="health-panel-label">Health</span>
-
-        <!-- Hero health dials -->
-        <div class="health-dial">
-            <span class="health-dial-label">H1</span>
-            <button class="health-btn health-up" data-piece="hero-red">▲</button>
-            <span class="health-display" data-piece="hero-red">15</span>
-            <button class="health-btn health-down" data-piece="hero-red">▼</button>
-        </div>
-        <div class="health-dial">
-            <span class="health-dial-label">H2</span>
-            <button class="health-btn health-up" data-piece="hero-blue">▲</button>
-            <span class="health-display" data-piece="hero-blue">15</span>
-            <button class="health-btn health-down" data-piece="hero-blue">▼</button>
-        </div>
-        <div class="health-dial">
-            <span class="health-dial-label">H3</span>
-            <button class="health-btn health-up" data-piece="hero-green">▲</button>
-            <span class="health-display" data-piece="hero-green">15</span>
-            <button class="health-btn health-down" data-piece="hero-green">▼</button>
-        </div>
-        <div class="health-dial">
-            <span class="health-dial-label">H4</span>
-            <button class="health-btn health-up" data-piece="hero-yellow">▲</button>
-            <span class="health-display" data-piece="hero-yellow">15</span>
-            <button class="health-btn health-down" data-piece="hero-yellow">▼</button>
-        </div>
-
-        <!-- Sidekick health dials -->
-        <div class="health-dial">
-            <span class="health-dial-label">S1</span>
-            <button class="health-btn health-up" data-piece="sidekick-red">▲</button>
-            <span class="health-display" data-piece="sidekick-red">6</span>
-            <button class="health-btn health-down" data-piece="sidekick-red">▼</button>
-        </div>
-        <div class="health-dial">
-            <span class="health-dial-label">S2</span>
-            <button class="health-btn health-up" data-piece="sidekick-blue">▲</button>
-            <span class="health-display" data-piece="sidekick-blue">6</span>
-            <button class="health-btn health-down" data-piece="sidekick-blue">▼</button>
-        </div>
-        <div class="health-dial">
-            <span class="health-dial-label">S3</span>
-            <button class="health-btn health-up" data-piece="sidekick-green">▲</button>
-            <span class="health-display" data-piece="sidekick-green">6</span>
-            <button class="health-btn health-down" data-piece="sidekick-green">▼</button>
-        </div>
-        <div class="health-dial">
-            <span class="health-dial-label">S4</span>
-            <button class="health-btn health-up" data-piece="sidekick-yellow">▲</button>
-            <span class="health-display" data-piece="sidekick-yellow">6</span>
-            <button class="health-btn health-down" data-piece="sidekick-yellow">▼</button>
+        <div id="healthDialsContainer">
+            <!-- Health dials will be dynamically added here -->
         </div>
     </div>
 
+    <!-- Turn Management Panel - on the right side below health -->
+    <div class="turn-panel">
+        <span class="turn-panel-label">Turn Manager</span>
+        <div class="turn-info">
+            <div class="turn-display">
+                <span class="turn-label">Turn:</span>
+                <span id="turnNumber">-</span>
+            </div>
+            <div class="player-display">
+                <span class="player-label">Active Player:</span>
+                <span id="activePlayer">None</span>
+            </div>
+        </div>
+
+        <div class="actions-section">
+            <span class="actions-label">Actions (Select 2)</span>
+            <div class="action-buttons">
+                <button id="maneuverBtn" class="action-btn" data-action="maneuver">
+                    <span class="action-name">Maneuver</span>
+                    <span class="action-count">0</span>
+                </button>
+                <button id="attackBtn" class="action-btn" data-action="attack">
+                    <span class="action-name">Attack</span>
+                    <span class="action-count">0</span>
+                </button>
+                <button id="schemeBtn" class="action-btn" data-action="scheme">
+                    <span class="action-name">Scheme</span>
+                    <span class="action-count">0</span>
+                </button>
+            </div>
+        </div>
+
+        <button id="nextTurnBtn" class="next-turn-btn" disabled>Next Turn</button>
+    </div>
+
     <div class="container">
-        <h1>Board Game</h1>
+        <h1>Unmatched</h1>
+
+        <!-- Player Management Controls -->
+        <div class="player-controls">
+            <button id="addPlayerBtn" class="control-btn">➕ Add Player</button>
+        </div>
 
         <!-- Inactive Area -->
         <div class="inactive-area" id="inactiveArea">
             <span class="inactive-area-label">Inactive Area</span>
-
-            <!-- Hero pieces -->
-            <div class="game-piece hero hero-red" data-piece-id="hero-red" draggable="true">
-                <span class="piece-label">H1</span>
-            </div>
-            <div class="game-piece hero hero-blue" data-piece-id="hero-blue" draggable="true">
-                <span class="piece-label">H2</span>
-            </div>
-            <div class="game-piece hero hero-green" data-piece-id="hero-green" draggable="true">
-                <span class="piece-label">H3</span>
-            </div>
-            <div class="game-piece hero hero-yellow" data-piece-id="hero-yellow" draggable="true">
-                <span class="piece-label">H4</span>
-            </div>
-
-            <!-- Sidekick pieces -->
-            <div class="game-piece sidekick sidekick-red" data-piece-id="sidekick-red" draggable="true">
-                <span class="piece-label">S1</span>
-            </div>
-            <div class="game-piece sidekick sidekick-blue" data-piece-id="sidekick-blue" draggable="true">
-                <span class="piece-label">S2</span>
-            </div>
-            <div class="game-piece sidekick sidekick-green" data-piece-id="sidekick-green" draggable="true">
-                <span class="piece-label">S3</span>
-            </div>
-            <div class="game-piece sidekick sidekick-yellow" data-piece-id="sidekick-yellow" draggable="true">
-                <span class="piece-label">S4</span>
-            </div>
+            <!-- Game pieces will be dynamically added here -->
         </div>
 
         <!-- Game Board -->

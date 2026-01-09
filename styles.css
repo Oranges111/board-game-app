@@ -60,27 +60,25 @@ h1 {
 /* Starting Space Number */
 .starting-space-number {
     position: absolute;
-    top: -8px;
-    left: -8px;
-    width: 18px;
-    height: 18px;
-    background: rgba(255, 255, 255, 0.95);
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.98);
     border: 2px solid #2c3e50;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7em;
+    font-size: 0.75em;
     font-weight: bold;
     color: #2c3e50;
     z-index: 150;
     pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.circle-space.starting-space {
-    border-color: #ffd700;
-    border-width: 4px;
-}
+/* Starting spaces have no special border - only the small number marker */
 
 .circle-space:hover {
     transform: scale(1.1);
@@ -178,12 +176,11 @@ h1 {
     border-radius: 2px;
 }
 
-/* Layout Selector - positioned on side */
+/* Layout Selector - positioned on bottom left */
 .layout-selector {
     position: fixed;
     left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
+    bottom: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -227,6 +224,34 @@ h1 {
     border-color: #764ba2;
 }
 
+/* Player Controls */
+.player-controls {
+    margin: 0 auto 15px;
+    text-align: center;
+}
+
+.control-btn {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+}
+
 /* Inactive Area */
 .inactive-area {
     width: 900px;
@@ -257,8 +282,7 @@ h1 {
 .health-panel {
     position: fixed;
     right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 20%;
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -269,6 +293,8 @@ h1 {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     min-width: 100px;
+    max-height: 35vh;
+    overflow-y: auto;
 }
 
 .health-panel-label {
@@ -281,6 +307,12 @@ h1 {
     border-bottom: 2px solid #5a6a7a;
 }
 
+#healthDialsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .health-dial {
     display: flex;
     align-items: center;
@@ -291,12 +323,59 @@ h1 {
     border: 1px solid #ddd;
 }
 
+/* Color-coded health dials */
+.health-dial.dial-red {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(192, 57, 43, 0.15) 100%);
+    border: 2px solid #e74c3c;
+}
+
+.health-dial.dial-blue {
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(41, 128, 185, 0.15) 100%);
+    border: 2px solid #3498db;
+}
+
+.health-dial.dial-green {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(39, 174, 96, 0.15) 100%);
+    border: 2px solid #2ecc71;
+}
+
+.health-dial.dial-yellow {
+    background: linear-gradient(135deg, rgba(241, 196, 15, 0.2) 0%, rgba(243, 156, 18, 0.15) 100%);
+    border: 2px solid #f1c40f;
+}
+
 .health-dial-label {
     font-size: 0.85em;
     font-weight: bold;
     color: #2c3e50;
     min-width: 24px;
     text-align: center;
+}
+
+.delete-piece-btn {
+    width: 20px;
+    height: 20px;
+    background: rgba(231, 76, 60, 0.9);
+    border: 2px solid #c0392b;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    color: white;
+    transition: all 0.2s ease;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-piece-btn:hover {
+    background: #e74c3c;
+    transform: scale(1.15);
+}
+
+.delete-piece-btn:active {
+    transform: scale(0.95);
 }
 
 .health-btn {
@@ -336,6 +415,186 @@ h1 {
     min-width: 28px;
     text-align: center;
     border: 2px solid #5a6a7a;
+}
+
+/* Turn Panel - positioned on top left side */
+.turn-panel {
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+    padding: 20px 18px;
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 15px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    min-width: 180px;
+}
+
+.turn-panel-label {
+    font-weight: bold;
+    color: #333;
+    font-size: 1em;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #5a6a7a;
+}
+
+.turn-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.turn-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95em;
+    padding: 6px 8px;
+    background: rgba(247, 247, 247, 0.8);
+    border-radius: 8px;
+}
+
+.player-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+}
+
+.turn-label {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+#turnNumber {
+    color: #667eea;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.player-label {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#activePlayer {
+    color: white;
+    font-weight: bold;
+    font-size: 1.4em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.actions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.actions-label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.action-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #5a6a7a;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9em;
+}
+
+.action-btn:hover {
+    background: #f0f0f0;
+    border-color: #667eea;
+    transform: translateX(-2px);
+}
+
+.action-btn.selected-once {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #764ba2;
+}
+
+.action-btn.selected-twice {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    border-color: #c0392b;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-name {
+    font-weight: bold;
+}
+
+.action-count {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    min-width: 20px;
+    text-align: center;
+}
+
+.action-btn.selected-once .action-count,
+.action-btn.selected-twice .action-count {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.next-turn-btn {
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.next-turn-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.next-turn-btn:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.next-turn-btn:active:not(:disabled) {
+    transform: translateY(0);
 }
 
 /* Game Piece Base Styles */
