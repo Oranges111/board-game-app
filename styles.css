@@ -31,98 +31,408 @@ h1 {
 
 /* Game Board Styles */
 .board {
-    width: 600px;
-    height: 400px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 10px;
+    width: 900px;
+    height: 500px;
+    position: relative;
     margin: 0 auto 30px;
-    background: #f0f0f0;
-    padding: 10px;
+    background: linear-gradient(135deg, #a8b5c4 0%, #d4dae0 100%);
+    padding: 15px;
     border-radius: 15px;
-    border: 3px solid #333;
+    border: 4px solid #5a6a7a;
+    overflow: visible;
 }
 
-/* Quadrant Styles */
-.quadrant {
-    background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
-    border: 2px solid #333;
-    border-radius: 10px;
+/* Circle Space Styles */
+.circle-space {
+    position: absolute;
+    border-radius: 50%;
+    border: 3px solid #2c3e50;
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
 }
 
-.quadrant:hover {
-    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-    transform: scale(1.02);
-}
-
-.quadrant.drag-over {
-    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-    border: 3px dashed #333;
-    transform: scale(1.05);
-}
-
-.quadrant.occupied {
-    background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
-}
-
-.quadrant-label {
+/* Starting Space Number */
+.starting-space-number {
     position: absolute;
-    top: 10px;
+    top: -8px;
+    left: -8px;
+    width: 18px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #2c3e50;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    font-weight: bold;
+    color: #2c3e50;
+    z-index: 150;
+    pointer-events: none;
+}
+
+.circle-space.starting-space {
+    border-color: #ffd700;
+    border-width: 4px;
+}
+
+.circle-space:hover {
+    transform: scale(1.1);
+    border-width: 3px;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+.circle-space.drag-over {
+    border: 3px solid #fff;
+    transform: scale(1.15);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+.circle-space.occupied {
+    border: 3px solid #ffd700;
+}
+
+/* Zone Color Segments */
+.circle-space .zone-segment {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+
+/* Single color circle */
+.circle-space.zones-1 {
+    background: var(--zone-color-1);
+}
+
+/* Two color split - simple vertical line through center */
+.circle-space.zones-2 .zone-segment:nth-child(1) {
+    background: var(--zone-color-1);
+    clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+}
+
+.circle-space.zones-2 .zone-segment:nth-child(2) {
+    background: var(--zone-color-2);
+    clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+}
+
+/* Three color split - simple Y-shape with 120° sections */
+.circle-space.zones-3 .zone-segment:nth-child(1) {
+    background: var(--zone-color-1);
+    clip-path: polygon(50% 50%, 50% 0, 100% 0, 100% 100%);
+}
+
+.circle-space.zones-3 .zone-segment:nth-child(2) {
+    background: var(--zone-color-2);
+    clip-path: polygon(50% 50%, 100% 100%, 0 100%, 0 50%);
+}
+
+.circle-space.zones-3 .zone-segment:nth-child(3) {
+    background: var(--zone-color-3);
+    clip-path: polygon(50% 50%, 0 50%, 0 0, 50% 0);
+}
+
+/* Four color split - pie chart style (90° each) */
+.circle-space.zones-4 .zone-segment:nth-child(1) {
+    background: var(--zone-color-1);
+    clip-path: polygon(50% 50%, 50% 0, 100% 0, 100% 50%);
+}
+
+.circle-space.zones-4 .zone-segment:nth-child(2) {
+    background: var(--zone-color-2);
+    clip-path: polygon(50% 50%, 100% 50%, 100% 100%, 50% 100%);
+}
+
+.circle-space.zones-4 .zone-segment:nth-child(3) {
+    background: var(--zone-color-3);
+    clip-path: polygon(50% 50%, 50% 100%, 0 100%, 0 50%);
+}
+
+.circle-space.zones-4 .zone-segment:nth-child(4) {
+    background: var(--zone-color-4);
+    clip-path: polygon(50% 50%, 0 50%, 0 0, 50% 0);
+}
+
+/* Zone Colors */
+.zone-red { background: #e74c3c; }
+.zone-blue { background: #3498db; }
+.zone-grey { background: #95a5a6; }
+.zone-orange { background: #e67e22; }
+.zone-purple { background: #9b59b6; }
+
+/* Adjacency Lines */
+.adjacency-line {
+    position: absolute;
+    height: 4px;
+    background: #2c3e50;
+    transform-origin: left center;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 2px;
+}
+
+/* Layout Selector - positioned on side */
+.layout-selector {
+    position: fixed;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.layout-label {
+    font-weight: bold;
+    color: #333;
+    font-size: 0.85em;
+    writing-mode: horizontal-tb;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.layout-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #5a6a7a;
+    background: white;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.layout-btn:hover {
+    background: #e0e0e0;
+    transform: translateX(3px);
+}
+
+.layout-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #764ba2;
+}
+
+/* Inactive Area */
+.inactive-area {
+    width: 900px;
+    height: 120px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #7f8c8d 0%, #95a5a6 100%);
+    border: 3px solid #5a6a7a;
+    border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 25px 10px 10px 10px;
+    position: relative;
+}
+
+.inactive-area-label {
+    position: absolute;
+    top: 5px;
     left: 10px;
+    font-size: 0.8em;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+/* Health Panel - positioned on right side */
+.health-panel {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 15px 12px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    min-width: 100px;
+}
+
+.health-panel-label {
     font-weight: bold;
     color: #333;
     font-size: 0.9em;
+    text-align: center;
+    margin-bottom: 5px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #5a6a7a;
 }
 
-/* Game Piece Styles */
+.health-dial {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: rgba(247, 247, 247, 0.8);
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.health-dial-label {
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #2c3e50;
+    min-width: 24px;
+    text-align: center;
+}
+
+.health-btn {
+    width: 24px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #5a6a7a;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    color: #333;
+    transition: all 0.2s ease;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.health-btn:hover {
+    background: #fff;
+    transform: scale(1.1);
+    border-color: #667eea;
+}
+
+.health-btn:active {
+    transform: scale(0.95);
+}
+
+.health-display {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 0.9em;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 8px;
+    border-radius: 8px;
+    min-width: 28px;
+    text-align: center;
+    border: 2px solid #5a6a7a;
+}
+
+/* Game Piece Base Styles */
 .game-piece {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
     border-radius: 50%;
-    border: 3px solid #333;
     cursor: grab;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 0 auto 20px;
     transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4),
+                inset 0 2px 5px rgba(255, 255, 255, 0.4);
     position: relative;
+    z-index: 100;
 }
 
 .game-piece:hover {
-    transform: scale(1.1);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transform: scale(1.15);
 }
 
 .game-piece:active {
     cursor: grabbing;
-    transform: scale(0.95);
+    transform: scale(1.05);
 }
 
 .game-piece.dragging {
-    opacity: 0.5;
+    opacity: 0.7;
     cursor: grabbing;
+}
+
+/* Hero Pieces */
+.game-piece.hero {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(0, 0, 0, 0.3);
+}
+
+.hero-red {
+    background: radial-gradient(circle, #ff6b6b 0%, #ee5a6f 50%, #c92a2a 100%);
+}
+
+.hero-blue {
+    background: radial-gradient(circle, #4dabf7 0%, #339af0 50%, #1971c2 100%);
+}
+
+.hero-green {
+    background: radial-gradient(circle, #51cf66 0%, #37b24d 50%, #2b8a3e 100%);
+}
+
+.hero-yellow {
+    background: radial-gradient(circle, #ffd43b 0%, #fcc419 50%, #f59f00 100%);
+}
+
+/* Sidekick Pieces */
+.game-piece.sidekick {
+    width: 35px;
+    height: 35px;
+    border: 3px solid rgba(0, 0, 0, 0.3);
+}
+
+.sidekick-red {
+    background: radial-gradient(circle, #ffa8a8 0%, #ff8787 50%, #ff6b6b 100%);
+}
+
+.sidekick-blue {
+    background: radial-gradient(circle, #a5d8ff 0%, #74c0fc 50%, #4dabf7 100%);
+}
+
+.sidekick-green {
+    background: radial-gradient(circle, #8ce99a 0%, #69db7c 50%, #51cf66 100%);
+}
+
+.sidekick-yellow {
+    background: radial-gradient(circle, #ffe066 0%, #ffd43b 50%, #fcc419 100%);
 }
 
 .piece-label {
     font-weight: bold;
-    color: #333;
-    font-size: 0.8em;
+    color: #fff;
+    font-size: 0.85em;
     text-align: center;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
-/* Game piece when placed in quadrant */
-.quadrant .game-piece {
+/* Game pieces when placed in circle space */
+.circle-space .game-piece.hero {
     margin: 0;
     position: absolute;
+    width: 45px;
+    height: 45px;
+}
+
+.circle-space .game-piece.sidekick {
+    margin: 0;
+    position: absolute;
+    width: 30px;
+    height: 30px;
 }
 
 /* Game Info Styles */
@@ -160,15 +470,22 @@ h1 {
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+    .board {
+        width: 700px;
+        height: 400px;
+    }
+}
+
 @media (max-width: 768px) {
     .board {
-        width: 400px;
+        width: 500px;
         height: 300px;
     }
 
-    .game-piece {
-        width: 60px;
-        height: 60px;
+    .player-piece {
+        width: 40px;
+        height: 40px;
     }
 
     h1 {
@@ -178,17 +495,20 @@ h1 {
 
 @media (max-width: 480px) {
     .board {
-        width: 300px;
-        height: 250px;
-        gap: 5px;
+        width: 350px;
+        height: 220px;
     }
 
-    .game-piece {
-        width: 50px;
-        height: 50px;
+    .player-piece {
+        width: 35px;
+        height: 35px;
     }
 
     .container {
-        padding: 20px;
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.5em;
     }
 }

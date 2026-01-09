@@ -7,33 +7,117 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Layout Selector - moved to side -->
+    <div class="layout-selector">
+        <span class="layout-label">Layouts</span>
+        <button class="layout-btn active" data-layout="1">1</button>
+        <button class="layout-btn" data-layout="2">2</button>
+        <button class="layout-btn" data-layout="3">3</button>
+        <button class="layout-btn" data-layout="4">4</button>
+        <button class="layout-btn" data-layout="5">5</button>
+    </div>
+
+    <!-- Health Dials Panel - on the right side -->
+    <div class="health-panel">
+        <span class="health-panel-label">Health</span>
+
+        <!-- Hero health dials -->
+        <div class="health-dial">
+            <span class="health-dial-label">H1</span>
+            <button class="health-btn health-up" data-piece="hero-red">▲</button>
+            <span class="health-display" data-piece="hero-red">15</span>
+            <button class="health-btn health-down" data-piece="hero-red">▼</button>
+        </div>
+        <div class="health-dial">
+            <span class="health-dial-label">H2</span>
+            <button class="health-btn health-up" data-piece="hero-blue">▲</button>
+            <span class="health-display" data-piece="hero-blue">15</span>
+            <button class="health-btn health-down" data-piece="hero-blue">▼</button>
+        </div>
+        <div class="health-dial">
+            <span class="health-dial-label">H3</span>
+            <button class="health-btn health-up" data-piece="hero-green">▲</button>
+            <span class="health-display" data-piece="hero-green">15</span>
+            <button class="health-btn health-down" data-piece="hero-green">▼</button>
+        </div>
+        <div class="health-dial">
+            <span class="health-dial-label">H4</span>
+            <button class="health-btn health-up" data-piece="hero-yellow">▲</button>
+            <span class="health-display" data-piece="hero-yellow">15</span>
+            <button class="health-btn health-down" data-piece="hero-yellow">▼</button>
+        </div>
+
+        <!-- Sidekick health dials -->
+        <div class="health-dial">
+            <span class="health-dial-label">S1</span>
+            <button class="health-btn health-up" data-piece="sidekick-red">▲</button>
+            <span class="health-display" data-piece="sidekick-red">6</span>
+            <button class="health-btn health-down" data-piece="sidekick-red">▼</button>
+        </div>
+        <div class="health-dial">
+            <span class="health-dial-label">S2</span>
+            <button class="health-btn health-up" data-piece="sidekick-blue">▲</button>
+            <span class="health-display" data-piece="sidekick-blue">6</span>
+            <button class="health-btn health-down" data-piece="sidekick-blue">▼</button>
+        </div>
+        <div class="health-dial">
+            <span class="health-dial-label">S3</span>
+            <button class="health-btn health-up" data-piece="sidekick-green">▲</button>
+            <span class="health-display" data-piece="sidekick-green">6</span>
+            <button class="health-btn health-down" data-piece="sidekick-green">▼</button>
+        </div>
+        <div class="health-dial">
+            <span class="health-dial-label">S4</span>
+            <button class="health-btn health-up" data-piece="sidekick-yellow">▲</button>
+            <span class="health-display" data-piece="sidekick-yellow">6</span>
+            <button class="health-btn health-down" data-piece="sidekick-yellow">▼</button>
+        </div>
+    </div>
+
     <div class="container">
         <h1>Board Game</h1>
-        
-        <!-- Game Board -->
-        <div class="board" id="gameBoard">
-            <div class="quadrant" id="quadrant-1" data-quadrant="1">
-                <span class="quadrant-label">Quadrant 1</span>
+
+        <!-- Inactive Area -->
+        <div class="inactive-area" id="inactiveArea">
+            <span class="inactive-area-label">Inactive Area</span>
+
+            <!-- Hero pieces -->
+            <div class="game-piece hero hero-red" data-piece-id="hero-red" draggable="true">
+                <span class="piece-label">H1</span>
             </div>
-            <div class="quadrant" id="quadrant-2" data-quadrant="2">
-                <span class="quadrant-label">Quadrant 2</span>
+            <div class="game-piece hero hero-blue" data-piece-id="hero-blue" draggable="true">
+                <span class="piece-label">H2</span>
             </div>
-            <div class="quadrant" id="quadrant-3" data-quadrant="3">
-                <span class="quadrant-label">Quadrant 3</span>
+            <div class="game-piece hero hero-green" data-piece-id="hero-green" draggable="true">
+                <span class="piece-label">H3</span>
             </div>
-            <div class="quadrant" id="quadrant-4" data-quadrant="4">
-                <span class="quadrant-label">Quadrant 4</span>
+            <div class="game-piece hero hero-yellow" data-piece-id="hero-yellow" draggable="true">
+                <span class="piece-label">H4</span>
+            </div>
+
+            <!-- Sidekick pieces -->
+            <div class="game-piece sidekick sidekick-red" data-piece-id="sidekick-red" draggable="true">
+                <span class="piece-label">S1</span>
+            </div>
+            <div class="game-piece sidekick sidekick-blue" data-piece-id="sidekick-blue" draggable="true">
+                <span class="piece-label">S2</span>
+            </div>
+            <div class="game-piece sidekick sidekick-green" data-piece-id="sidekick-green" draggable="true">
+                <span class="piece-label">S3</span>
+            </div>
+            <div class="game-piece sidekick sidekick-yellow" data-piece-id="sidekick-yellow" draggable="true">
+                <span class="piece-label">S4</span>
             </div>
         </div>
 
-        <!-- Draggable Game Piece -->
-        <div class="game-piece" id="gamePiece" draggable="true">
-            <span class="piece-label">Drag Me!</span>
+        <!-- Game Board -->
+        <div class="board" id="gameBoard">
+            <!-- Circles will be generated by JavaScript -->
         </div>
 
         <!-- Game Info -->
         <div class="game-info">
-            <p id="gameStatus">Drag the circle to a quadrant</p>
+            <p id="gameStatus">Drag the player to any circle on the board</p>
             <button id="resetBtn">Reset Game</button>
         </div>
     </div>
