@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board Game - Drag & Drop</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Board Game</h1>
+        
+        <!-- Game Board -->
+        <div class="board" id="gameBoard">
+            <div class="quadrant" id="quadrant-1" data-quadrant="1">
+                <span class="quadrant-label">Quadrant 1</span>
+            </div>
+            <div class="quadrant" id="quadrant-2" data-quadrant="2">
+                <span class="quadrant-label">Quadrant 2</span>
+            </div>
+            <div class="quadrant" id="quadrant-3" data-quadrant="3">
+                <span class="quadrant-label">Quadrant 3</span>
+            </div>
+            <div class="quadrant" id="quadrant-4" data-quadrant="4">
+                <span class="quadrant-label">Quadrant 4</span>
+            </div>
+        </div>
+
+        <!-- Draggable Game Piece -->
+        <div class="game-piece" id="gamePiece" draggable="true">
+            <span class="piece-label">Drag Me!</span>
+        </div>
+
+        <!-- Game Info -->
+        <div class="game-info">
+            <p id="gameStatus">Drag the circle to a quadrant</p>
+            <button id="resetBtn">Reset Game</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

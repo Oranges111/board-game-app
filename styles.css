@@ -1,0 +1,194 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    text-align: center;
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+/* Game Board Styles */
+.board {
+    width: 600px;
+    height: 400px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    margin: 0 auto 30px;
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 15px;
+    border: 3px solid #333;
+}
+
+/* Quadrant Styles */
+.quadrant {
+    background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+    border: 2px solid #333;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.quadrant:hover {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    transform: scale(1.02);
+}
+
+.quadrant.drag-over {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    border: 3px dashed #333;
+    transform: scale(1.05);
+}
+
+.quadrant.occupied {
+    background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+}
+
+.quadrant-label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-weight: bold;
+    color: #333;
+    font-size: 0.9em;
+}
+
+/* Game Piece Styles */
+.game-piece {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    border-radius: 50%;
+    border: 3px solid #333;
+    cursor: grab;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.game-piece:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.game-piece:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.game-piece.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.piece-label {
+    font-weight: bold;
+    color: #333;
+    font-size: 0.8em;
+    text-align: center;
+}
+
+/* Game piece when placed in quadrant */
+.quadrant .game-piece {
+    margin: 0;
+    position: absolute;
+}
+
+/* Game Info Styles */
+.game-info {
+    margin-top: 20px;
+}
+
+#gameStatus {
+    font-size: 1.2em;
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+#resetBtn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+#resetBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+#resetBtn:active {
+    transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .board {
+        width: 400px;
+        height: 300px;
+    }
+
+    .game-piece {
+        width: 60px;
+        height: 60px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+}
+
+@media (max-width: 480px) {
+    .board {
+        width: 300px;
+        height: 250px;
+        gap: 5px;
+    }
+
+    .game-piece {
+        width: 50px;
+        height: 50px;
+    }
+
+    .container {
+        padding: 20px;
+    }
+}
